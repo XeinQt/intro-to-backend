@@ -1,10 +1,12 @@
 import express from "express";
-import dotenv, { parse } from "dotenv";
+import dotenv from "dotenv";
 
 dotenv.config();
 const app = express();
 
-const PORT = process.env.PORT;
+app.use(express.json());
+
+const PORT = process.env.PORT || 5000;
 
 const users = [
   { id: 1, name: "ico", lname: "alentio" },
@@ -19,27 +21,7 @@ const users = [
   { id: 10, name: "chris", lname: "wilson" },
 ];
 
-//get
-app.get("/api/users", (req, res) => {
-  res.status(201).sendFile({ msg: "hello" });
-});
-
-app.get("api/products", (request, response) => {
-  response.send([{ name: "Rico", lname: "Alentio" }]);
-});
-
-//acces with params
-app.get("/api/users/:id", (request, response) => {
-  console.log(request.params.id);
-
-  const parseId = parseInt(request.params.id);
-  if (isNaN(parseId)) return response.status(400).send([{ msg: "error" }]);
-  const findUser = users.find((user) => user.id === parseId);
-
-  return response(findUser);
-});
-
-//reaquest a quety
+// Get all users or filter by query ?name=
 app.get("/api/users", (request, response) => {
   const { name } = request.query;
 
@@ -48,12 +30,43 @@ app.get("/api/users", (request, response) => {
       (user) => user.name.toLowerCase() === name.toLowerCase()
     );
 
-    return response.json(users);
+    return response.json(
+      filteredUsers.length ? filteredUsers : { msg: "User not found" }
+    );
   }
 
   response.json(users);
 });
 
+// Get a single user by ID
+app.get("/api/users/:id", (request, response) => {
+  const parseId = parseInt(request.params.id);
+
+  if (isNaN(parseId)) {
+    return response.status(400).json({ msg: "Invalid ID" });
+  }
+
+  const findUser = users.find((user) => user.id === parseId);
+
+  if (!findUser) {
+    return response.status(404).json({ msg: "User not found" });
+  }
+
+  response.json(findUser);
+});
+
+// it is use for delet and update the users information and name lastname and etc
+app.post("/api/users", (request, response) => {
+  console.log(request.body);
+
+  return response.status(400);
+});
+
+// Get products
+app.get("/api/products", (request, response) => {
+  response.json([{ name: "Rico", lname: "Alentio" }]);
+});
+
 app.listen(PORT, () => {
-  console.log(`Running port of ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
